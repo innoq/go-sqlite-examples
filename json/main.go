@@ -13,32 +13,46 @@ import (
 
 var tweetsJSON = `[
 	{
-		"id": "123123123",
-		"data": "2020-01-01 10:15:23",
+		"id": "123121323",
+		"date": "2020-01-01 10:15:23",
 		"author": "alice",
-		"content": "hello world!", 
+		"text": "hello world!", 
 		"mentions":[]
 	},
 	{
-		"id": "123123143",
-		"data": "2020-01-01 06:15:23",
+		"id": "123121523",
+		"date": "2020-01-01 06:15:23",
 		"author": "alice",
-		"content": "Hello?!", 
-		"mentions":[]
+		"text": "@dave, hello?!", 
+		"mentions":["dave"]
 	},
 	{
-		"id": "123123200",
-		"data": "2020-01-08 08:12:23",
-		"author": "bob",
-		"content": "hi @alice!", 
+		"id": "123122000",
+		"date": "2020-01-08 08:12:23",
+		"author": "dave",
+		"text": "hi @alice!", 
 		"mentions":["alice"]
 	},
 	{
 		"id": "123122001",
-		"data": "2020-01-03 15:23:23",
+		"date": "2020-02-03 15:23:23",
 		"author": "hal",
-		"content": "hi @alice, hello @bob!", 
-		"mentions":["alice", "bob"]
+		"text": "hi @alice, hello @dave!", 
+		"mentions":["alice", "dave"]
+	},
+	{
+		"id": "123123323",
+		"date": "2020-02-10 10:15:23",
+		"author": "bob",
+		"text": "Please let me inside @hal!", 
+		"mentions":["hal"]
+	},
+	{
+		"id": "123123324",
+		"date": "2020-02-10 10:16:12",
+		"author": "hal",
+		"text": "I’m sorry @dave, I’m afraid I can’t do that!", 
+		"mentions":["dave"]
 	}
 ]`
 
@@ -71,6 +85,14 @@ func run() error {
 		return err
 	}
 	log.Printf("User '%s' authored %d tweets!", "alice", len(tweets))
+	log.Println("")
+
+	tweets, err = queryMentions(db, "dave")
+	if err != nil {
+		return err
+	}
+	log.Printf("User '%s' was mentioned in %d tweets!", "dave", len(tweets))
+	log.Println("")
 
 	return nil
 }
@@ -124,9 +146,31 @@ func queryCreated(db *sql.DB, user string) ([]Tweet, error) {
 }
 
 func queryMentions(db *sql.DB, user string) ([]Tweet, error) {
-	rows := make([]Tweet, 0)
-	//queryStmt := `SELECT content FROM data WHERE json_extract(content, '$.%s')='%s'`
-	return rows, nil
+	tweets := make([]Tweet, 0)
+	queryStmt := fmt.Sprintf(
+		`SELECT content 
+		FROM data, json_tree(data.content, '$.mentions') 
+		WHERE json_tree.value = '%s'`, user)
+	rows, err := db.Query(queryStmt)
+	if err != nil {
+		return tweets, err
+	}
+	for rows.Next() {
+		var tweet Tweet
+		var content string
+		err = rows.Scan(&content)
+		if err != nil {
+			return tweets, err
+		}
+		err := json.Unmarshal([]byte(content), &tweet)
+		if err != nil {
+			return tweets, err
+		}
+		log.Printf("Result: %s", tweet)
+		tweets = append(tweets, tweet)
+	}
+	log.Println("")
+	return tweets, nil
 }
 
 func insertTweet(db *sql.DB, tweet map[string]interface{}) error {
