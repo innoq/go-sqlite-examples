@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/innoq/go-sqlite-example/utils"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -17,6 +18,7 @@ func main() {
 }
 
 func run() error {
+	utils.CleanDBFile("simple.sqlite")
 	db, err := sql.Open("sqlite3", "simple.sqlite")
 	if err != nil {
 		return err

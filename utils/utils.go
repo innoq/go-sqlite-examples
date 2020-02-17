@@ -36,12 +36,13 @@ func SimpleTableSetup(db *sql.DB) error {
 	log.Println("SIMPLE TABLE SETUP")
 	log.Println("")
 	sqlStmt := `CREATE TABLE data (id TEXT not null primary key, content TEXT);`
-	result, err := db.Exec(sqlStmt)
+	_, err := db.Exec(sqlStmt)
 	if err != nil {
 		return err
 	}
 
-	_, err = LogResult(result)
+	sqlStmt = "CREATE UNIQUE INDEX idx_data_id ON data(id);"
+	_, err = db.Exec(sqlStmt)
 	if err != nil {
 		return err
 	}
