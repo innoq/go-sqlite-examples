@@ -1,7 +1,10 @@
 package utils
 
 import (
+	"crypto/sha1"
 	"database/sql"
+	"encoding/hex"
+	"encoding/json"
 	"log"
 	"os"
 )
@@ -16,7 +19,7 @@ func LogResult(result sql.Result) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	log.Printf("created table id %d, affecded rows: %d", id, numRows)
+	log.Printf("LastInsertId %d, RowsAffected: %d", id, numRows)
 	return id, nil
 }
 
@@ -30,7 +33,7 @@ func CleanDBFile(database string) {
 
 // SimpleTableSetup - setup a simple table
 func SimpleTableSetup(db *sql.DB) error {
-	log.Println("TABLE SETUP")
+	log.Println("SIMPLE TABLE SETUP")
 	log.Println("")
 	sqlStmt := `CREATE TABLE data (id TEXT not null primary key, content TEXT);`
 	result, err := db.Exec(sqlStmt)
@@ -45,4 +48,21 @@ func SimpleTableSetup(db *sql.DB) error {
 	log.Println("")
 
 	return nil
+}
+
+// GetSha1Checksum - returns the sha1 checksum of the given string
+func GetSha1Checksum(content string) string {
+	bv := []byte(content)
+	h := sha1.New()
+	h.Write(bv)
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+// GetID - returns a ID for given Map
+func GetID(entry map[string]interface{}) (string, error) {
+	b, err := json.Marshal(entry)
+	if err != nil {
+		return "", err
+	}
+	return GetSha1Checksum(string(b)), nil
 }
