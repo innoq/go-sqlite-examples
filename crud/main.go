@@ -25,7 +25,7 @@ func run() error {
 		return err
 	}
 
-	err = tableSetup(db)
+	err = utils.SimpleTableSetup(db)
 	if err != nil {
 		return err
 	}
@@ -53,24 +53,6 @@ func run() error {
 		return err
 	}
 	countValues(db, "")
-
-	return nil
-}
-
-func tableSetup(db *sql.DB) error {
-	log.Println("TABLE SETUP")
-	log.Println("")
-	sqlStmt := `CREATE TABLE data (id TEXT not null primary key, content TEXT);`
-	result, err := db.Exec(sqlStmt)
-	if err != nil {
-		return err
-	}
-
-	_, err = utils.LogResult(result)
-	if err != nil {
-		return err
-	}
-	log.Println("")
 
 	return nil
 }

@@ -27,3 +27,22 @@ func CleanDBFile(database string) {
 		log.Printf("error while deleting old db: %s", err)
 	}
 }
+
+// SimpleTableSetup - setup a simple table
+func SimpleTableSetup(db *sql.DB) error {
+	log.Println("TABLE SETUP")
+	log.Println("")
+	sqlStmt := `CREATE TABLE data (id TEXT not null primary key, content TEXT);`
+	result, err := db.Exec(sqlStmt)
+	if err != nil {
+		return err
+	}
+
+	_, err = LogResult(result)
+	if err != nil {
+		return err
+	}
+	log.Println("")
+
+	return nil
+}
